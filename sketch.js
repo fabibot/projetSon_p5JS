@@ -24,10 +24,12 @@ let fft;
 let setUpBottomText = ""
 let bottomText = setUpBottomText;
 
+let bottomShapeCol;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   setupColor = color(162, 173, 153);
+  bottomShapeCol =  color(0, 0, 0);
 
   background(setupColor);
   currentColor = setupColor;
@@ -93,9 +95,40 @@ function draw() {
     lerpAmt += 0.03; // vitesse de transition
     if (lerpAmt >= 1) {
       lerpAmt = 1; // bloque à 1
-      transitioning = false; // transition terminée
+      transitioning = false;
     }
   }
+
+    // forme noire bottom
+    let levelVoice = amplitudeVoice.getLevel();
+
+    let bass = fft.getEnergy("bass");
+    let treble = fft.getEnergy("treble");
+
+    fill(bottomShapeCol);
+    strokeWeight(0);
+    let shapeHeight = windowHeight/1.25;
+  
+    let maxLift = 300; // hauteur max du "soulèvement" en pixels
+    let lift = map(levelVoice, 0, 0.5, 0, maxLift);
+  
+    let weightedBass = bass * 1.6;  // renforce le grave
+    let weightedTreble = treble * 0.2; // réduit l'aigu
+  
+    let balance = map(weightedBass - weightedTreble, -255, 255, 0, windowWidth);
+  
+    beginShape();
+    vertex(0, shapeHeight);   
+    curveVertex(0, shapeHeight);
+    curveVertex(windowWidth / 4, shapeHeight - lift *1.3);
+    curveVertex(balance/ 1.3 + lift, shapeHeight - lift *0.3);
+    curveVertex(windowWidth / 1.5, shapeHeight - lift);
+    curveVertex(windowWidth, shapeHeight);
+    vertex(windowWidth, shapeHeight);  
+    vertex(windowWidth, windowHeight);
+    vertex(0, windowHeight)
+    vertex(0, shapeHeight)    
+    endShape();
 
   for (let i = squares.length - 1; i >= 0; i--) {
     squares[i].update();
@@ -109,42 +142,30 @@ function draw() {
 
 
   let levels = amplitude.getLevel()
-  let levelVoice = amplitudeVoice.getLevel();
   if(soundIsRunning) {
     if(levels > 0.04) {
       drawSquarres();
     }
   }
 
-  // On récupère l'énergie des graves et des aigus
-  let bass = fft.getEnergy("bass");
-  let treble = fft.getEnergy("treble");
-  
+  if (levels > 0.06) {
+    for (let i = 0; i < 10; i++) {
+      let randomWhite = random(["#f2f2f0", '#ffffff21']);
+      if(squares[i]) {
+        squares[i].col = randomWhite;
+      }
+      setTimeout(()=> {
+        for (let square of squares) {
+          if(square.col == "#f2f2f0" || square.col == '#ffffff21') {
+            let randomColor = random(['#32323240', '#eeeeee6e', '#1818186e']);
+            square.col = randomColor;
+          }
+          
+        }
+      }, "200");
+    }
+  }
 
-  fill('black');
-  stroke('black');
-  strokeWeight(2);
-  let shapeHeight = windowHeight/1.25;
-
-  let maxLift = 500; // hauteur max du "soulèvement" en pixels
-  let lift = map(levelVoice, 0, 0.5, 0, maxLift);
-
-  let weightedBass = bass * 1.6;  // renforce le grave
-  let weightedTreble = treble * 0.2; // réduit l'aigu
-
-  let balance = map(weightedBass - weightedTreble, -255, 255, 0, windowWidth);
-
-  beginShape();
-  vertex(0, shapeHeight);   
-  bezierVertex(
-    0, shapeHeight,
-    balance/1.5, shapeHeight - lift, 
-    windowWidth, shapeHeight);
-  vertex(windowWidth, shapeHeight);  
-  vertex(windowWidth, windowHeight);
-  vertex(0, windowHeight)
-  vertex(0, shapeHeight)    
-  endShape(CLOSE);   
 
   textSize(11);
   textFont('Verdana');
@@ -197,6 +218,7 @@ class AudioManager {
     startColor = currentColor;
     endColor = goalColor;
     currentColor = endColor;
+    bottomShapeCol = color(goalColor.levels[0]- 150, goalColor.levels[1] - 150, goalColor.levels[2] - 150);
     transitioning = true; // active la transition
 
   }
@@ -226,7 +248,7 @@ class Square {
     this.vel = p5.Vector.fromAngle(angle).mult(speed);
     
     // couleur aléatoire parmi gris, blanc, noir
-    let colors = ['#32323240', '#eeeeee6e', '#1818186e', '#f5f5f5'];
+    let colors = ['#32323240', '#eeeeee6e', '#1818186e'];
     this.col = random(colors);
   }
   
@@ -254,9 +276,6 @@ class Square {
 // gestion du message d'introcution
 document.addEventListener("DOMContentLoaded", (event) => {
   let msgIntro = document.getElementsByClassName("msg-intro");
-
-  console.log(msgIntro);
-
   document.addEventListener('click', ()=> {
     msgIntro[0].classList.add("display-none");
   });
