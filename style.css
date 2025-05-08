@@ -1,0 +1,56 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body, button {
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-weight: 700;
+}
+
+canvas {
+  display: block;
+  transition: all 2s;
+}
+
+svg {
+  position: absolute;
+  bottom: 0;
+}
+
+button {
+  border: none;
+  border-radius: 5px;
+  padding: 15px;
+  width: 120px;
+  margin: 10px;
+  background-color: black;
+  color: white;
+  
+  transition: all 0.2s;
+}
+
+button:hover {
+  background-color: #304136;
+}
+
+.msg-intro {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 1s;
+}
+
+.msg-intro img {
+  width: 115px;
+  margin-top: 150px;
+}
+
+.display-none {
+  opacity: 0;
+}
+
+
